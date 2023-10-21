@@ -37,7 +37,6 @@ async def main() -> None:
     csv_utils = CSVProcess()
 
     browser = await parser_utils.start_browser()
-    # csv_utils.check_file()
 
     try:
         while True:
