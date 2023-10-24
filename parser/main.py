@@ -10,22 +10,39 @@ from pyppeteer.browser import Browser
 async def fetch(browser: Browser, parser_utils: ParsingNews, csv_utils: CSVProcess, 
                 redis_utils: RedisProcess) -> None:
     """
-    Каждый запрос парсит самое первое объявление и сохраняет его если оно уникальное
+    Каждый запрос парсит новости и сохраняет только уникальные
     """
     page = await browser.newPage()
     await page.setExtraHTTPHeaders(parser_utils.get_header())
     await page.goto(parser_utils.construct_url())
-    await page.waitForResponse(urlOrPredicate=parser_utils.response_predicate)
-    title, href = await parser_utils.get_news(page)
 
-    exists = redis_utils.exists(title)
+    try:
+        await asyncio.gather(
+            page.waitForResponse(urlOrPredicate=parser_utils.response_predicate),
+            asyncio.sleep(4)
+        )
+    except asyncio.TimeoutError:
+        return await page.close()
 
-    if exists is None:
-        redis_utils.save(title)
-        csv_utils.add_record(title, href)
-        print(f"Новая запись сохранена! Время запроса: {time.time()}")
+    list = await parser_utils.get_news(page)
 
-    print(f'Объект существует. Время запроса: {time.time()}')
+    for news in list:
+        title = news["title"]
+        href = news["href"]
+
+        exists = redis_utils.exists(title)
+
+        if exists is None:
+            redis_utils.save(title)
+            csv_utils.add_record(title, href)
+            print(f'Новая запись сохранена!')
+
+    num_pages = len(await browser.pages())
+    time_now = time.time()
+    print(f'Время запроса: {time_now}, Стр: {num_pages}')
+
+    await page.close()
+
 
 async def main() -> None:
     """

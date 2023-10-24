@@ -1,7 +1,7 @@
 import random
 
 from urllib import parse
-from typing import Tuple
+from typing import List, Dict
 from pyppeteer import launch
 from pyppeteer.browser import Browser
 from pyppeteer.page import Page, ElementHandle
@@ -81,29 +81,24 @@ class ParsingNews:
         title = await element.querySelector('span')
         return await page.evaluate('(element) => element.textContent', title)
 
-    async def get_news(self, page: Page) -> Tuple[str, str]:
+    async def get_news(self, page: Page) -> List[Dict[str, str]]:
         """
-        Парсим первое объявление со страницы
+        Парсим объявления со страницы
         """
         selector_all_news = 'div.article-list'
         selector_one_news = 'a.no-style'
 
         news = await page.waitForSelector(selector_all_news, {'timeout': 10000})
-        topic = await news.querySelector(selector_one_news)
+        topics = await news.querySelectorAll(selector_one_news)
 
-        title_text = await self.get_text_title(page, topic)
-        href = await self.get_href(topic)
-        return title_text, href
+        list = []
 
+        for topic in topics:
+            title = await self.get_text_title(page, topic)
+            href = await self.get_href(topic)
 
-
-
-
-
-
-
-
-
-    
-
-
+            list.append({
+                "href": href,
+                "title": title,
+            })
+        return list

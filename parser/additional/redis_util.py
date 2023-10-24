@@ -28,3 +28,6 @@ class RedisProcess:
         :return: Значение ключа `title` в Redis, или `None`, если ключ не существует.
         """
         return self.redis.get(title)
+    
+    def get_len_keys(self) -> int:
+        return self.redis.keys('*')
