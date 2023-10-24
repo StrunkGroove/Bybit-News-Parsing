@@ -3,4 +3,5 @@
 ```
 docker-compose up --build
 ```
-Файл topics.csv будет в директории parser
+Данный парсер делает запрос на сайт Bybit каждую секунду и сохраняет в .csv только новые новости.
+https://announcements.bybit.com/en-US/
